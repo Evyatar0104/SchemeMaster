@@ -289,6 +289,11 @@ const HEEBO = "'Heebo', system-ui, -apple-system, sans-serif";
 const MONO  = "'JetBrains Mono', ui-monospace, monospace";
 const ACCENT_GRAD = 'linear-gradient(135deg, #e63946 0%, #c0202e 100%)';
 
+const HE_ORDINALS = [
+  'ראשון','שני','שלישי','רביעי','חמישי',
+  'שישי','שביעי','שמיני','תשיעי','עשירי','אחד עשר','שנים עשר',
+];
+
 const GLOBAL_CSS = `
   @import url('https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap');
 
@@ -342,6 +347,17 @@ const GLOBAL_CSS = `
     0%   { transform: scale(1); }
     50%  { transform: scale(1.2); }
     100% { transform: scale(1); }
+  }
+  @keyframes perfectPop {
+    0%   { opacity: 0; transform: scale(0.6) rotate(-8deg); }
+    55%  { transform: scale(1.12) rotate(3deg); opacity: 1; }
+    80%  { transform: scale(0.96) rotate(-1deg); }
+    100% { transform: scale(1) rotate(0deg); opacity: 1; }
+  }
+  @keyframes perfectGlow {
+    0%   { box-shadow: 0 0 0 0 rgba(230,57,70,0.5); }
+    60%  { box-shadow: 0 0 0 20px rgba(230,57,70,0); }
+    100% { box-shadow: 0 0 0 20px rgba(230,57,70,0); }
   }
 
   .fade-in     { animation: fadeIn 0.2s ease both; }
@@ -615,9 +631,12 @@ function QuestionCard({ question, difficulty, val, setVal, inputRef, locked, las
       ? { borderColor: 'rgba(230,57,70,0.5)', background: 'linear-gradient(145deg, #1a1014 0%, #110d0e 100%)' }
       : {};
 
-  const phaseTitle = question?.phase?.title?.split('—')[0].trim() ?? '';
+  const phaseTitle  = question?.phase?.title?.split('—')[0].trim() ?? '';
   const phaseLetter = question?.phase?.letter ?? '';
-  const phaseTrack = question?.phase?._track ?? '';
+  const phaseTrack  = question?.phase?._track ?? '';
+  const bulletNum   = (question?.bulletIdx ?? 0) + 1;
+  const bulletTotal = question?.phase?.bullets?.length ?? '?';
+  const bulletOrdinal = HE_ORDINALS[(question?.bulletIdx ?? 0)] ?? String(bulletNum);
 
   return (
     <div className={`qcard qcard-enter ${flash}`} style={{
@@ -647,6 +666,19 @@ function QuestionCard({ question, difficulty, val, setVal, inputRef, locked, las
               color: 'var(--text-dim)', marginTop: 3, letterSpacing: '0.05em',
             }}>{phaseTrack}</div>
           )}
+          <div style={{
+            marginTop: 6, display: 'inline-flex', alignItems: 'center', gap: 6,
+            background: 'var(--accent-dim)', borderRadius: 6,
+            padding: '3px 8px', border: '1px solid rgba(230,57,70,0.2)',
+          }}>
+            <span style={{
+              fontFamily: HEEBO, fontWeight: 500, fontSize: 11,
+              color: 'var(--accent)', letterSpacing: '0.02em',
+            }}>סעיף {bulletOrdinal}</span>
+            <span style={{ color: 'var(--text-ghost)', fontSize: 10, fontFamily: MONO }}>
+              {bulletNum}/{bulletTotal}
+            </span>
+          </div>
         </div>
         <div style={{
           width: 36, height: 36, borderRadius: '50%',
@@ -733,7 +765,7 @@ function QuestionCard({ question, difficulty, val, setVal, inputRef, locked, las
 }
 
 // ============================================================
-// PHASE COMPLETE OVERLAY
+// PHASE COMPLETE OVERLAY + PERFECT RUN SCREEN
 // ============================================================
 function overlayBtn(primary) {
   return {
@@ -746,6 +778,71 @@ function overlayBtn(primary) {
   };
 }
 
+function PerfectRunScreen({ state, dispatch }) {
+  const totalQuestions = PROTOCOLS[state.track].phases.reduce((s, p) => s + p.bullets.length, 0);
+  return (
+    <div className="fade-in" style={{
+      position: 'fixed', inset: 0, zIndex: 100,
+      background: 'rgba(4, 4, 6, 0.97)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
+      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+      gap: 28, direction: 'rtl', padding: 32,
+    }}>
+      {/* Ambient glow */}
+      <div style={{
+        position: 'absolute', width: 260, height: 260, borderRadius: '50%', pointerEvents: 'none',
+        background: 'radial-gradient(circle, rgba(230,57,70,0.14) 0%, transparent 70%)',
+      }} />
+
+      {/* Star badge */}
+      <div style={{
+        width: 88, height: 88, borderRadius: '50%', background: ACCENT_GRAD,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        fontSize: 40, color: '#fff', zIndex: 1,
+        animation: 'perfectPop 0.55s cubic-bezier(0.34,1.4,0.64,1) both, perfectGlow 0.8s ease 0.3s 1',
+      }}>★</div>
+
+      {/* Headline */}
+      <div style={{ textAlign: 'center', zIndex: 1 }}>
+        <div style={{
+          fontFamily: HEEBO, fontWeight: 900, color: 'var(--text-primary)', letterSpacing: '-0.02em',
+          fontSize: 'clamp(30px, 9vw, 40px)', lineHeight: 1.1,
+        }}>ניקוד מושלם</div>
+        <div style={{
+          fontFamily: HEEBO, fontWeight: 300, fontSize: 14, color: 'var(--text-dim)',
+          marginTop: 10, lineHeight: 1.7, letterSpacing: '0.03em',
+        }}>
+          השלמת את כל X-CARE · CARE · PFC<br />
+          <span style={{ fontFamily: MONO, fontWeight: 600, color: 'var(--accent)', fontSize: 13 }}>
+            {totalQuestions} סעיפים
+          </span>
+          {' '}ללא שגיאה אחת
+        </div>
+      </div>
+
+      {/* Stat strip */}
+      <div style={{
+        display: 'flex', gap: 32, zIndex: 1,
+        fontFamily: HEEBO, fontWeight: 300, fontSize: 13, color: 'var(--text-dim)',
+      }}>
+        <span>
+          <span style={{ fontFamily: MONO, fontWeight: 600, fontSize: 22, color: 'var(--success)', display: 'block', textAlign: 'center' }}>100%</span>
+          דיוק
+        </span>
+        <span>
+          <span style={{ fontFamily: MONO, fontWeight: 600, fontSize: 22, color: 'var(--text-primary)', display: 'block', textAlign: 'center' }}>{totalQuestions}</span>
+          סעיפים
+        </span>
+      </div>
+
+      {/* Actions */}
+      <div style={{ display: 'flex', gap: 12, zIndex: 1, flexWrap: 'wrap', justifyContent: 'center' }}>
+        <button onClick={() => dispatch({ type: 'RESET' })} style={overlayBtn(false)}>בחר פרוטוקול</button>
+        <button onClick={() => dispatch({ type: 'RETRY_PHASE' })} style={overlayBtn(true)}>שחק שוב ←</button>
+      </div>
+    </div>
+  );
+}
+
 function PhaseCompleteScreen({ state, dispatch }) {
   const proto   = PROTOCOLS[state.track];
   const phase   = proto.phases[state.activePhaseIdx];
@@ -755,6 +852,10 @@ function PhaseCompleteScreen({ state, dispatch }) {
   const accuracy = state.totalAnswered
     ? Math.round(((state.totalAnswered - state.sessionWrong) / state.totalAnswered) * 100) : 100;
   const timeStr = `${Math.floor(elapsed / 60)}:${String(elapsed % 60).padStart(2, '0')}`;
+
+  if (isRunDone && state.sessionWrong === 0) {
+    return <PerfectRunScreen state={state} dispatch={dispatch} />;
+  }
 
   return (
     <div className="fade-in" style={{
