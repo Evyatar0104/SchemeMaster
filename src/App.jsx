@@ -283,113 +283,134 @@ function pickQuestion(proto, mode, phaseIdx, difficulty, seenSet, lastKey) {
 }
 
 // ============================================================
-// GLOBAL CSS
+// VISUAL LAYER — Surgical minimalism with warmth
 // ============================================================
-const GLOBAL_CSS = `
-  *, *::before, *::after { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  html, body { margin: 0; padding: 0; background: #0a0a0a; overscroll-behavior: none; }
-  button  { touch-action: manipulation; font-family: inherit; cursor: pointer; }
-  input, textarea { -webkit-appearance: none; appearance: none; font-family: inherit; }
-  input::placeholder, textarea::placeholder { color: rgba(255,255,255,0.18); }
-  ::-webkit-scrollbar { display: none; }
+const HEEBO = "'Heebo', system-ui, -apple-system, sans-serif";
+const MONO  = "'JetBrains Mono', ui-monospace, monospace";
+const ACCENT_GRAD = 'linear-gradient(135deg, #e63946 0%, #c0202e 100%)';
 
-  @keyframes slideUp {
-    from { opacity: 0; transform: translateY(14px); }
-    to   { opacity: 1; transform: none; }
+const GLOBAL_CSS = `
+  @import url('https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap');
+
+  :root {
+    --bg-top: #0d0d0d;
+    --bg-bottom: #060608;
+    --surface: #111114;
+    --surface-grad: linear-gradient(145deg, #161619 0%, #0f0f12 100%);
+    --surface-2: #1c1c20;
+    --surface-2-grad: linear-gradient(145deg, #202024 0%, #181820 100%);
+    --border: #252528;
+    --border-lit: rgba(230, 57, 70, 0.4);
+    --accent: #e63946;
+    --accent-grad: linear-gradient(135deg, #e63946 0%, #c0202e 100%);
+    --accent-dim: rgba(230, 57, 70, 0.12);
+    --success: #2ecc71;
+    --success-dim: rgba(46, 204, 113, 0.1);
+    --text-primary: #efefef;
+    --text-dim: #5a5a62;
+    --text-ghost: #2e2e34;
   }
-  @keyframes correctRing {
-    0%   { border-color: #27ae60; box-shadow: 0 0 0 0 rgba(39,174,96,0.5); }
-    40%  { box-shadow: 0 0 0 8px rgba(39,174,96,0); }
-    100% { border-color: rgba(255,255,255,0.1); box-shadow: none; }
+
+  *, *::before, *::after { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; padding: 0; background: #0a0a0c; overscroll-behavior: none; }
+  body { font-family: ${HEEBO}; }
+  button { touch-action: manipulation; font-family: inherit; cursor: pointer; }
+  input, textarea { -webkit-appearance: none; appearance: none; font-family: inherit; }
+  input::placeholder, textarea::placeholder { color: var(--text-ghost); }
+  ::-webkit-scrollbar { display: none; }
+  input:focus, textarea:focus { outline: none; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
   }
-  @keyframes wrongShake {
-    0%,100% { transform: translateX(0); }
-    15%     { transform: translateX(-10px); }
-    45%     { transform: translateX(8px); }
-    75%     { transform: translateX(-4px); }
+  @keyframes flashSuccess {
+    0%   { border-color: var(--border); }
+    15%  { border-color: #2ecc71; }
+    85%  { border-color: #2ecc71; }
+    100% { border-color: var(--border); }
   }
-  @keyframes popIn {
-    0%   { transform: scale(0.7);  opacity: 0; }
-    65%  { transform: scale(1.07); opacity: 1; }
+  @keyframes flashWrong {
+    0%   { transform: translateX(0); }
+    20%  { transform: translateX(-5px); }
+    40%  { transform: translateX(5px); }
+    60%  { transform: translateX(-3px); }
+    80%  { transform: translateX(3px); }
+    100% { transform: translateX(0); }
+  }
+  @keyframes badgeCheck {
+    0%   { transform: scale(1); }
+    50%  { transform: scale(1.2); }
     100% { transform: scale(1); }
   }
-  @keyframes streakBounce {
-    0%,100% { transform: scale(1); }
-    40%     { transform: scale(1.3); }
-  }
-  @keyframes glowPulse {
-    0%,100% { opacity: 0.6; }
-    50%     { opacity: 1; }
-  }
-  @keyframes barFill {
-    from { width: 0%; }
-  }
-  @keyframes countIn {
-    from { opacity: 0; transform: translateY(6px); }
-    to   { opacity: 1; transform: none; }
-  }
 
-  .screen      { animation: slideUp 0.22s cubic-bezier(0.16,1,0.3,1) both; }
-  .card-ok     { animation: correctRing 0.8s ease forwards; }
-  .card-wrong  { animation: wrongShake 0.38s ease; }
-  .badge-enter { animation: popIn 0.38s cubic-bezier(0.34,1.56,0.64,1) both; }
-  .streak-pop  { animation: streakBounce 0.35s ease; }
-  .stat-in     { animation: countIn 0.4s ease both; }
+  .fade-in     { animation: fadeIn 0.2s ease both; }
+  .qcard-enter { animation: fadeIn 0.18s ease both; }
+  .flash-ok    { animation: flashSuccess 0.6s ease 1; }
+  .flash-wrong { animation: flashWrong 0.4s ease 1; }
+  .badge-check { animation: badgeCheck 0.4s ease 1; }
 
-  input:focus, textarea:focus { outline: none; }
+  .qcard { border: 1px solid var(--border); background: var(--surface-grad); }
+  .qcard:focus-within { border-color: var(--border-lit); box-shadow: inset 0 0 0 1px rgba(230,57,70,0.08); }
+
+  .blank-input:focus { border-bottom-color: var(--accent); box-shadow: 0 3px 0 -1px rgba(230,57,70,0.2); }
+  .override-btn:hover { border-color: var(--success); color: var(--success); }
+  .submit-btn:active:not(:disabled) { transform: scale(0.97); }
+  .exit-x:hover { color: var(--text-dim); }
+  .backlink:hover { color: var(--text-primary); }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; }
+  }
 `;
 
-// ============================================================
-// DESIGN TOKENS
-// ============================================================
-const FONT = '"Segoe UI", system-ui, -apple-system, Arial, sans-serif';
-const SURFACE  = 'rgba(255,255,255,0.05)';
-const BORDER   = 'rgba(255,255,255,0.1)';
+const LABEL = {
+  fontFamily: HEEBO, fontWeight: 300, fontSize: 11,
+  letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text-dim)',
+};
 
-function card(extra = {}) {
-  return {
-    background: 'rgba(255,255,255,0.05)',
-    border: `1px solid ${BORDER}`,
-    borderRadius: 16,
-    backdropFilter: 'blur(16px)',
-    ...extra,
-  };
-}
-
-function badge(size, color) {
+function badge(size) {
   return {
     width: size, height: size, borderRadius: '50%',
-    background: `radial-gradient(circle at 35% 35%, ${lighten(color, 0.18)}, ${color})`,
-    boxShadow: `0 4px 16px ${color}44, inset 0 1px 0 rgba(255,255,255,0.15)`,
+    background: ACCENT_GRAD,
     display: 'flex', alignItems: 'center', justifyContent: 'center',
-    fontSize: Math.max(11, size * 0.33), fontWeight: 800, color: '#fff',
-    flexShrink: 0, letterSpacing: -0.5,
-  };
-}
-
-function lighten(hex, amt) {
-  const n = parseInt(hex.slice(1), 16);
-  const r = Math.min(255, ((n >> 16) & 0xff) + Math.round(255 * amt));
-  const g = Math.min(255, ((n >> 8)  & 0xff) + Math.round(255 * amt));
-  const b = Math.min(255, ((n)       & 0xff) + Math.round(255 * amt));
-  return `rgb(${r},${g},${b})`;
-}
-
-function pill(active, color = '#c0392b') {
-  return {
-    padding: '10px 22px', borderRadius: 50, fontSize: 14, fontFamily: FONT,
-    border: `1px solid ${active ? color : BORDER}`,
-    background: active ? color : 'rgba(255,255,255,0.04)',
-    color: '#fff', cursor: 'pointer', minHeight: 44, fontWeight: active ? 700 : 400,
-    transition: 'all 0.14s',
+    color: '#fff', fontFamily: HEEBO, fontWeight: 900, flexShrink: 0,
   };
 }
 
 // ============================================================
-// SHARED COMPONENTS
+// SETUP-SCREEN PRIMITIVES
 // ============================================================
+function ScreenWrap({ children }) {
+  return (
+    <div className="fade-in" style={{
+      flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center',
+      width: '100%', padding: '24px 20px', overflowY: 'auto',
+    }}>
+      {children}
+    </div>
+  );
+}
 
-function NavCard({ onClick, color, children, highlight = false }) {
+function Title({ children }) {
+  return (
+    <h1 style={{
+      margin: 0, fontFamily: HEEBO, fontWeight: 700,
+      fontSize: 'clamp(18px, 5vw, 20px)', color: 'var(--text-primary)', textAlign: 'center',
+    }}>{children}</h1>
+  );
+}
+
+function Subtitle({ children }) {
+  return (
+    <p style={{
+      margin: '8px 0 32px', fontFamily: HEEBO, fontWeight: 300, fontSize: 13,
+      color: 'var(--text-dim)', textAlign: 'center', letterSpacing: '0.05em',
+    }}>{children}</p>
+  );
+}
+
+function MenuRow({ onClick, children }) {
   const [hov, setHov] = useState(false);
   return (
     <button
@@ -397,17 +418,12 @@ function NavCard({ onClick, color, children, highlight = false }) {
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
       style={{
-        ...card(),
-        display: 'block', width: '100%', textAlign: 'right',
-        padding: '16px 18px',
-        background: hov
-          ? `linear-gradient(135deg, ${color}12, rgba(255,255,255,0.04))`
-          : 'rgba(255,255,255,0.04)',
-        borderColor: hov ? `${color}88` : BORDER,
-        boxShadow: hov ? `0 0 0 1px ${color}30, 0 8px 32px ${color}14` : 'none',
-        transform: hov ? 'translateY(-1px)' : 'none',
-        transition: 'all 0.16s cubic-bezier(0.2,0,0.13,1)',
-        borderRight: `3px solid ${hov ? color : highlight ? `${color}60` : BORDER}`,
+        display: 'block', width: '100%', textAlign: 'right', padding: '16px 18px',
+        borderRadius: 14,
+        border: `1px solid ${hov ? 'var(--border-lit)' : 'var(--border)'}`,
+        borderRight: `3px solid ${hov ? 'var(--accent)' : 'var(--border)'}`,
+        background: hov ? 'var(--surface-2-grad)' : 'var(--surface-grad)',
+        color: 'var(--text-primary)', transition: 'all 150ms ease', cursor: 'pointer',
       }}
     >
       {children}
@@ -415,385 +431,267 @@ function NavCard({ onClick, color, children, highlight = false }) {
   );
 }
 
-function Label({ children, color }) {
+function BackLink({ onClick }) {
   return (
-    <div style={{
-      fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase',
-      fontWeight: 700, color: color || 'rgba(255,255,255,0.35)',
+    <button onClick={onClick} className="backlink" style={{
+      display: 'block', margin: '20px auto 0', background: 'none', border: 'none',
+      color: 'var(--text-dim)', fontFamily: HEEBO, fontWeight: 400, fontSize: 13,
+      padding: 8, transition: 'color 150ms',
     }}>
-      {children}
-    </div>
-  );
-}
-
-function BackBtn({ onClick }) {
-  return (
-    <button
-      onClick={onClick}
-      style={{
-        background: 'transparent', border: 'none',
-        color: 'rgba(255,255,255,0.3)', fontSize: 13,
-        padding: '10px 0', marginTop: 8, cursor: 'pointer',
-        transition: 'color 0.12s',
-      }}
-      onMouseEnter={e => (e.target.style.color = 'rgba(255,255,255,0.6)')}
-      onMouseLeave={e => (e.target.style.color = 'rgba(255,255,255,0.3)')}
-    >
       ← חזור
     </button>
   );
 }
 
-function ScoreHUD({ score, streak, total }) {
-  const prevStreak = useRef(streak);
-  const [popKey, setPopKey] = useState(0);
-  useEffect(() => {
-    if (streak > prevStreak.current && streak >= 3) setPopKey(k => k + 1);
-    prevStreak.current = streak;
-  }, [streak]);
-
-  return (
-    <div style={{
-      position: 'fixed', top: 14, left: 12, zIndex: 999,
-      background: 'rgba(10,10,10,0.7)',
-      border: `1px solid ${BORDER}`,
-      borderRadius: 24, padding: '5px 14px',
-      fontFamily: 'monospace', fontSize: 12, direction: 'ltr',
-      backdropFilter: 'blur(16px)',
-      display: 'flex', alignItems: 'center', gap: 10,
-    }}>
-      <span>
-        <span style={{ color: 'rgba(255,255,255,0.6)', fontWeight: 700 }}>{score}</span>
-        <span style={{ color: 'rgba(255,255,255,0.2)' }}>/{total}</span>
-      </span>
-      {streak >= 3 && (
-        <span key={popKey} className="streak-pop"
-          style={{ color: '#e74c3c', fontWeight: 800, fontSize: 13 }}>
-          ×{streak}
-        </span>
-      )}
-    </div>
-  );
-}
-
-function ProgressRing({ cleared, total, color }) {
-  const r = 14, circ = 2 * Math.PI * r, pct = total ? cleared / total : 0;
-  const done = pct >= 1;
-  return (
-    <svg width={38} height={38} style={{ flexShrink: 0 }}>
-      <circle cx={19} cy={19} r={r} fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth={2.5} />
-      <circle
-        cx={19} cy={19} r={r} fill="none"
-        stroke={done ? '#27ae60' : color}
-        strokeWidth={2.5} strokeDasharray={circ}
-        strokeDashoffset={circ * (1 - pct)} strokeLinecap="round"
-        transform="rotate(-90 19 19)"
-        style={{ transition: 'stroke-dashoffset 0.45s cubic-bezier(0.4,0,0.2,1)' }}
-      />
-      {done
-        ? <text x={19} y={23} textAnchor="middle" fill="#27ae60" fontSize={11} fontWeight={700}>✓</text>
-        : <text x={19} y={23} textAnchor="middle" fill="rgba(255,255,255,0.45)" fontSize={9} fontFamily={FONT}>{cleared}/{total}</text>
-      }
-    </svg>
-  );
-}
-
 // ============================================================
-// SCREENS
+// SETUP SCREENS
 // ============================================================
-
 function TrackSelector({ dispatch }) {
   const ICONS = { xcare: 'X', care: 'C', pfc: 'P', fullrun: '∞' };
-  const DESCS = {
-    xcare:   'X · EX · C · A · R · E',
-    care:    'C · A · R · E',
-    pfc:     '5 סעיפים',
-    fullrun: 'כל הסכמות בסדר',
-  };
   return (
-    <div style={{ width: '100%', maxWidth: 480, padding: '0 16px' }} className="screen">
-      {/* Header */}
-      <div style={{ textAlign: 'center', padding: '52px 0 36px' }}>
+    <ScreenWrap>
+      <div style={{ textAlign: 'center', marginBottom: 28 }}>
         <div style={{
-          display: 'inline-flex', alignItems: 'center', gap: 10,
-          background: 'rgba(231,76,60,0.1)', border: '1px solid rgba(231,76,60,0.25)',
-          borderRadius: 12, padding: '6px 14px', marginBottom: 20,
+          display: 'inline-flex', alignItems: 'center', gap: 8,
+          background: 'var(--accent-dim)', border: '1px solid var(--border-lit)',
+          borderRadius: 12, padding: '6px 14px', marginBottom: 18,
         }}>
-          <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#e74c3c', boxShadow: '0 0 6px #e74c3c' }} />
-          <span style={{ fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase', fontWeight: 700, color: 'rgba(255,255,255,0.55)' }}>
-            חזרה על סכמות
-          </span>
+          <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--accent)' }} />
+          <span style={{ ...LABEL }}>חזרה על סכמות</span>
         </div>
-        <h1 style={{ margin: 0, fontSize: 30, fontWeight: 800, letterSpacing: -1, color: '#fff' }}>
-          SchemeMaster
-        </h1>
-        <p style={{ margin: '8px 0 0', fontSize: 13, color: 'rgba(255,255,255,0.3)', lineHeight: 1.5 }}>
+        <h1 style={{
+          margin: 0, fontFamily: HEEBO, fontWeight: 900,
+          fontSize: 'clamp(26px, 7vw, 32px)', color: 'var(--text-primary)', letterSpacing: '-0.01em',
+        }}>SchemeMaster</h1>
+        <p style={{ margin: '8px 0 0', fontFamily: HEEBO, fontWeight: 300, fontSize: 13, color: 'var(--text-dim)' }}>
           בחר פרוטוקול לחזרה
         </p>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {Object.entries(PROTOCOLS).map(([key, proto]) => (
-          <NavCard key={key} color={TC[key]} highlight
-            onClick={() => dispatch({ type: 'SELECT_TRACK', track: key })}>
+          <MenuRow key={key} onClick={() => dispatch({ type: 'SELECT_TRACK', track: key })}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-              <div className="badge-enter" style={badge(50, TC[key])}>{ICONS[key]}</div>
+              <div style={{ ...badge(48), fontSize: 'clamp(18px, 5vw, 22px)' }}>{ICONS[key]}</div>
               <div style={{ flex: 1, minWidth: 0, textAlign: 'right' }}>
-                <div style={{ fontWeight: 700, fontSize: 16, color: '#fff' }}>{proto.label}</div>
-                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>{proto.subtitle}</div>
-                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.2)', marginTop: 4 }}>
-                  {proto.phases.length} שלבים · {proto.phases.reduce((a, p) => a + p.bullets.length, 0)} סעיפים
-                  {key !== 'fullrun' && ` · ${DESCS[key]}`}
-                </div>
+                <div style={{ fontFamily: HEEBO, fontWeight: 700, fontSize: 16, color: 'var(--text-primary)' }}>{proto.label}</div>
+                <div style={{ fontFamily: HEEBO, fontWeight: 300, fontSize: 12, color: 'var(--text-dim)', marginTop: 3 }}>{proto.subtitle}</div>
               </div>
-              <svg width={16} height={16} viewBox="0 0 16 16" fill="none">
-                <path d="M10 8L6 4M10 8L6 12" stroke="rgba(255,255,255,0.2)" strokeWidth={1.5} strokeLinecap="round" />
-              </svg>
+              <span style={{ fontFamily: MONO, fontSize: 11, color: 'var(--text-ghost)', flexShrink: 0 }}>
+                {proto.phases.length}·{proto.phases.reduce((a, p) => a + p.bullets.length, 0)}
+              </span>
             </div>
-          </NavCard>
+          </MenuRow>
         ))}
       </div>
 
-      <p style={{ textAlign: 'center', fontSize: 11, color: 'rgba(255,255,255,0.15)', marginTop: 32 }}>
+      <p style={{ textAlign: 'center', fontFamily: HEEBO, fontWeight: 300, fontSize: 11, color: 'var(--text-ghost)', marginTop: 28 }}>
         מבוסס על הסכמה האחודה לטיפול בנפגעים
       </p>
-    </div>
+    </ScreenWrap>
   );
 }
 
 function ModeSelector({ track, dispatch }) {
-  const color = TC[track];
   const proto = PROTOCOLS[track];
+  const MODES = [
+    { key: 'free',   label: 'חופשי',      desc: 'שאלות אקראיות מכל שלבי הפרוטוקול' },
+    { key: 'phased', label: 'שלב אחר שלב', desc: track === 'fullrun' ? 'X-CARE · CARE · PFC — כל הסכמות בסדר' : 'מתמקד בשלב אחד, עם מעקב התקדמות' },
+  ];
   return (
-    <div style={{ width: '100%', maxWidth: 480, padding: '0 16px' }} className="screen">
-      <div style={{ textAlign: 'center', padding: '48px 0 30px' }}>
-        <div style={badge(52, color)}>{proto.label.at(0)}</div>
-        <h2 style={{ margin: '16px 0 4px', fontSize: 22, fontWeight: 800 }}>{proto.label}</h2>
-        <p style={{ margin: 0, fontSize: 13, color: 'rgba(255,255,255,0.35)' }}>{proto.subtitle}</p>
+    <ScreenWrap>
+      <div style={{ textAlign: 'center' }}>
+        <div style={{ ...badge(56), fontSize: 'clamp(20px, 6vw, 24px)', margin: '0 auto 14px' }}>{proto.label.at(0)}</div>
+        <Title>{proto.label}</Title>
+        <Subtitle>{proto.subtitle}</Subtitle>
       </div>
-
-      <div style={{ marginBottom: 8 }}>
-        <Label>בחר מצב</Label>
-      </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 10 }}>
-        {[
-          { key: 'free',   icon: '⚡', label: 'חופשי',          desc: 'שאלות אקראיות מכל שלבי הפרוטוקול' },
-          { key: 'phased', icon: '→',  label: 'שלב אחר שלב', desc: track === 'fullrun' ? 'X-CARE · CARE · PFC — כל הסכמות בסדר' : 'מתמקד בשלב אחד, עם מעקב התקדמות' },
-        ].map(({ key, icon, label, desc }) => (
-          <NavCard key={key} color={color}
-            onClick={() => dispatch({ type: 'SELECT_MODE', mode: key })}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-              <span style={{ fontSize: 22, flexShrink: 0 }}>{icon}</span>
-              <div>
-                <div style={{ fontWeight: 700, fontSize: 15 }}>{label}</div>
-                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 3 }}>{desc}</div>
-              </div>
-            </div>
-          </NavCard>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {MODES.map(({ key, label, desc }) => (
+          <MenuRow key={key} onClick={() => dispatch({ type: 'SELECT_MODE', mode: key })}>
+            <div style={{ fontFamily: HEEBO, fontWeight: 700, fontSize: 15, color: 'var(--text-primary)' }}>{label}</div>
+            <div style={{ fontFamily: HEEBO, fontWeight: 300, fontSize: 12, color: 'var(--text-dim)', marginTop: 4 }}>{desc}</div>
+          </MenuRow>
         ))}
       </div>
-      <BackBtn onClick={() => dispatch({ type: 'RESET' })} />
-    </div>
+      <BackLink onClick={() => dispatch({ type: 'RESET' })} />
+    </ScreenWrap>
   );
 }
 
 function DifficultySelector({ track, mode, dispatch }) {
-  const color = TC[track];
   const DIFFS = [
-    { key: 'easy',   label: 'קל',     tag: '1 מילה',   desc: 'מילה בודדת חסרה — ההקשר המלא נראה' },
-    { key: 'medium', label: 'בינוני', tag: 'חצי משפט', desc: 'מחצית שנייה חסרה — תחילת המשפט גלויה' },
-    { key: 'hard',   label: 'קשה',    tag: 'ריק',      desc: 'רק כותרת השלב — כתוב מהזיכרון' },
+    { key: 'easy',   label: 'קל',     tag: 'מילה בודדת', desc: 'מילה בודדת חסרה — ההקשר המלא נראה' },
+    { key: 'medium', label: 'בינוני', tag: 'חצי משפט',   desc: 'מחצית שנייה חסרה — תחילת המשפט גלויה' },
+    { key: 'hard',   label: 'קשה',    tag: 'מהזיכרון',   desc: 'רק כותרת השלב — כתוב מהזיכרון' },
   ];
   return (
-    <div style={{ width: '100%', maxWidth: 480, padding: '0 16px' }} className="screen">
-      <div style={{ textAlign: 'center', padding: '48px 0 30px' }}>
-        <h2 style={{ margin: '0 0 4px', fontSize: 22, fontWeight: 800 }}>רמת קושי</h2>
-        <p style={{ margin: 0, fontSize: 13, color: 'rgba(255,255,255,0.35)' }}>כמה קשה תרצה את השאלות?</p>
+    <ScreenWrap>
+      <div style={{ textAlign: 'center' }}>
+        <Title>רמת קושי</Title>
+        <Subtitle>כמה קשה תרצה את השאלות?</Subtitle>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {DIFFS.map(({ key, label, tag, desc }) => (
-          <NavCard key={key} color={color}
-            onClick={() => dispatch({ type: 'SELECT_DIFFICULTY', difficulty: key })}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-              <div style={{
-                minWidth: 64, textAlign: 'center',
-                borderLeft: `1px solid ${BORDER}`, paddingLeft: 14, marginLeft: 2,
-              }}>
-                <div style={{ fontSize: 15, fontWeight: 800 }}>{label}</div>
-                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', marginTop: 2 }}>{tag}</div>
-              </div>
-              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)', lineHeight: 1.45 }}>{desc}</div>
+          <MenuRow key={key} onClick={() => dispatch({ type: 'SELECT_DIFFICULTY', difficulty: key })}>
+            <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12 }}>
+              <div style={{ fontFamily: HEEBO, fontWeight: 700, fontSize: 15, color: 'var(--text-primary)' }}>{label}</div>
+              <div style={{ ...LABEL, fontSize: 11, letterSpacing: '0.08em' }}>{tag}</div>
             </div>
-          </NavCard>
+            <div style={{ fontFamily: HEEBO, fontWeight: 300, fontSize: 12, color: 'var(--text-dim)', marginTop: 6, lineHeight: 1.5 }}>{desc}</div>
+          </MenuRow>
         ))}
       </div>
-      <BackBtn onClick={() => dispatch({ type: 'SELECT_MODE', mode })} />
-    </div>
+      <BackLink onClick={() => dispatch({ type: 'SELECT_MODE', mode })} />
+    </ScreenWrap>
+  );
+}
+
+function PhaseBadgeButton({ phase, onClick }) {
+  const [hov, setHov] = useState(false);
+  return (
+    <button
+      onClick={onClick}
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
+      style={{
+        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
+        padding: '14px 6px', background: 'transparent', border: 'none', cursor: 'pointer',
+      }}
+    >
+      <div style={{
+        ...badge(48), fontSize: 'clamp(18px, 5vw, 22px)',
+        transform: hov ? 'translateY(-2px)' : 'none',
+        boxShadow: hov ? '0 0 0 3px rgba(230,57,70,0.15)' : 'none',
+        transition: 'transform 150ms ease, box-shadow 150ms ease',
+      }}>{phase.letter}</div>
+      <div style={{
+        fontFamily: HEEBO, fontWeight: 300, fontSize: 10, letterSpacing: '0.04em',
+        color: hov ? 'var(--text-primary)' : 'var(--text-dim)', textAlign: 'center',
+        lineHeight: 1.3, direction: 'rtl', transition: 'color 150ms ease',
+      }}>{phase.title.split('—')[0].trim()}</div>
+    </button>
   );
 }
 
 function PhaseSelector({ track, dispatch }) {
   const proto = PROTOCOLS[track];
-  const color = TC[track];
   return (
-    <div style={{ width: '100%', maxWidth: 480, padding: '0 16px' }} className="screen">
-      <div style={{ textAlign: 'center', padding: '48px 0 28px' }}>
-        <Label color={color}>{proto.label}</Label>
-        <h2 style={{ margin: '8px 0 4px', fontSize: 22, fontWeight: 800 }}>בחר שלב</h2>
+    <ScreenWrap>
+      <div style={{ textAlign: 'center' }}>
+        <Title>בחר שלב</Title>
+        <Subtitle>{proto.label} · {proto.subtitle}</Subtitle>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
-        {proto.phases.map((phase, idx) => {
-          const [hov, setHov] = useState(false);
-          return (
-            <button key={idx}
-              onClick={() => dispatch({ type: 'SELECT_PHASE', phaseIdx: idx })}
-              onMouseEnter={() => setHov(true)}
-              onMouseLeave={() => setHov(false)}
-              style={{
-                ...card({ padding: '16px 10px' }),
-                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
-                cursor: 'pointer', transition: 'all 0.15s',
-                borderColor: hov ? `${color}88` : BORDER,
-                background: hov ? `${color}10` : 'rgba(255,255,255,0.04)',
-                transform: hov ? 'translateY(-2px)' : 'none',
-                boxShadow: hov ? `0 6px 20px ${color}18` : 'none',
-              }}>
-              <div style={badge(46, color)}>{phase.letter}</div>
-              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.45)', textAlign: 'center', lineHeight: 1.4, direction: 'rtl' }}>
-                {phase.title.split('—')[0].trim()}
-              </div>
-              <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.22)', background: 'rgba(255,255,255,0.06)', borderRadius: 6, padding: '2px 8px' }}>
-                {phase.bullets.length}
-              </div>
-            </button>
-          );
-        })}
+      <div style={{
+        display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(64px, 1fr))',
+        gap: 12, maxWidth: 320, margin: '0 auto', width: '100%',
+      }}>
+        {proto.phases.map((phase, idx) => (
+          <PhaseBadgeButton key={idx} phase={phase} onClick={() => dispatch({ type: 'SELECT_PHASE', phaseIdx: idx })} />
+        ))}
       </div>
-      <BackBtn onClick={() => dispatch({ type: 'SELECT_MODE', mode: 'phased' })} />
-    </div>
+      <BackLink onClick={() => dispatch({ type: 'SELECT_MODE', mode: 'phased' })} />
+    </ScreenWrap>
   );
 }
 
 // ============================================================
-// INLINE BLANK
+// QUESTION CARD (game body)
 // ============================================================
-const INPUT_BASE = {
-  background: 'transparent', border: 'none', outline: 'none',
-  color: '#fff', fontFamily: FONT, fontSize: 16,
-  padding: '2px 4px 4px', direction: 'rtl', textAlign: 'right',
-};
-
-function InlineBlank({ question, difficulty, color, onSubmit, lastResult, onOverride, onNext }) {
-  const [val, setVal] = useState('');
-  const ref = useRef(null);
+function QuestionCard({ question, difficulty, val, setVal, inputRef, locked, lastResult, onOverride, onSubmitEnter }) {
   const isHard = difficulty === 'hard';
-  const locked = lastResult !== null;
-
-  useEffect(() => {
-    setVal('');
-    const t = setTimeout(() => ref.current?.focus(), 90);
-    return () => clearTimeout(t);
-  }, [question?.key]);
+  const len = question?.target?.length ?? 8;
 
   const handleKey = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey && !locked) { e.preventDefault(); onSubmit(val); }
+    if (e.key === 'Enter' && !e.shiftKey && !locked) { e.preventDefault(); onSubmitEnter(); }
   };
 
-  const cardClass = lastResult === 'correct' || lastResult === 'override' ? 'card-ok'
-    : lastResult === 'wrong' ? 'card-wrong' : '';
+  const flash = (lastResult === 'correct' || lastResult === 'override') ? 'flash-ok'
+    : lastResult === 'wrong' ? 'flash-wrong' : '';
 
-  const borderCol = lastResult === 'correct' || lastResult === 'override' ? '#27ae60'
-    : lastResult === 'wrong' ? '#e74c3c' : BORDER;
-
-  const inputW = Math.max(difficulty === 'medium' ? 140 : 72, (question?.target?.length ?? 8) * 9.5);
+  const stateStyle =
+    (lastResult === 'correct' || lastResult === 'override')
+      ? { borderColor: 'var(--success)', background: 'linear-gradient(145deg, #131a15 0%, #0d1210 100%)' }
+    : lastResult === 'wrong'
+      ? { borderColor: 'rgba(230,57,70,0.5)', background: 'linear-gradient(145deg, #1a1014 0%, #110d0e 100%)' }
+      : {};
 
   return (
-    <div className={cardClass} style={{
-      ...card({ padding: 20, marginBottom: 12 }),
-      border: `1px solid ${borderCol}`,
-      transition: 'border-color 0.2s',
+    <div className={`qcard qcard-enter ${flash}`} style={{
+      flex: 1, minHeight: 0, margin: '12px 16px', borderRadius: 16,
+      display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-end',
+      padding: 'clamp(20px, 5vw, 40px) clamp(16px, 5vw, 28px)',
+      transition: 'border-color 250ms ease, background 250ms ease',
+      overflow: 'hidden', direction: 'rtl', textAlign: 'right',
+      ...stateStyle,
     }}>
-      {/* phase mini label */}
-      <div style={{ marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
-        <div style={{ width: 4, height: 4, borderRadius: '50%', background: color, flexShrink: 0 }} />
-        <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.28)', lineHeight: 1.4 }}>
-          {question?.phase?._track && (
-            <span style={{ color, fontWeight: 700, marginLeft: 4 }}>{question.phase._track} · </span>
-          )}
-          {question?.phase?.title?.split('—')[0].trim()}
-        </span>
-      </div>
-
-      {/* question */}
       {isHard ? (
-        <>
-          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', marginBottom: 10 }}>כתוב את הסעיף המלא:</div>
-          <textarea ref={ref} value={val} rows={3}
+        <div style={{ width: '100%' }}>
+          <div style={{ ...LABEL, marginBottom: 12 }}>כתוב את הסעיף המלא</div>
+          <textarea
+            ref={inputRef} value={val} rows={3} disabled={locked}
             onChange={e => !locked && setVal(e.target.value)}
             onKeyDown={handleKey}
             style={{
-              ...INPUT_BASE, width: '100%',
-              border: `1px solid rgba(255,255,255,0.12)`, borderRadius: 10,
-              padding: '10px 12px', resize: 'none', lineHeight: 1.8,
-              background: 'rgba(255,255,255,0.03)',
+              width: '100%', background: 'transparent',
+              border: '1px solid var(--border-lit)', borderRadius: 12,
+              color: 'var(--text-primary)', fontFamily: HEEBO,
+              fontSize: 'clamp(14px, 3.5vw, 16px)', lineHeight: 2.0,
+              padding: '12px 14px', resize: 'none', direction: 'rtl', textAlign: 'right', outline: 'none',
             }}
           />
-        </>
+        </div>
       ) : (
-        <div style={{ fontSize: 16, lineHeight: 2.5, direction: 'rtl', wordBreak: 'break-word' }}>
+        <div style={{
+          width: '100%', fontFamily: HEEBO, fontWeight: 400,
+          fontSize: 'clamp(14px, 3.5vw, 16px)', lineHeight: 2.0,
+          direction: 'rtl', textAlign: 'right', wordBreak: 'break-word', color: 'var(--text-primary)',
+        }}>
           {question?.prefix && <span>{question.prefix} </span>}
-          <input ref={ref} type="text" value={val} placeholder="___" disabled={locked}
+          <input
+            ref={inputRef} type="text" value={val} placeholder="____" disabled={locked}
+            className="blank-input"
             onChange={e => !locked && setVal(e.target.value)}
             onKeyDown={handleKey}
             style={{
-              ...INPUT_BASE,
-              display: 'inline', verticalAlign: 'baseline', cursor: locked ? 'default' : 'text',
-              width: inputW,
-              borderBottom: `2px solid ${locked ? 'rgba(255,255,255,0.12)' : color}`,
-              transition: 'border-color 0.15s',
+              background: 'transparent', border: 'none',
+              borderBottom: '1.5px solid var(--border-lit)',
+              color: 'var(--text-primary)', fontFamily: HEEBO,
+              fontSize: 'inherit', lineHeight: 'inherit',
+              padding: '0 6px 2px',
+              minWidth: 80, width: `min(100%, max(80px, ${(len * 0.6).toFixed(1)}em))`,
+              outline: 'none', textAlign: 'center', direction: 'rtl',
+              transition: 'border-color 200ms, box-shadow 200ms',
             }}
           />
           {question?.suffix && <span> {question.suffix}</span>}
         </div>
       )}
 
-      {/* submit */}
-      {!locked && (
-        <div style={{ marginTop: 18, display: 'flex', alignItems: 'center', gap: 12 }}>
-          <button onClick={() => onSubmit(val)} style={{
-            padding: '10px 26px', borderRadius: 10, border: 'none',
-            background: color, color: '#fff', fontWeight: 700, fontSize: 14,
-            cursor: 'pointer', minHeight: 44,
-            boxShadow: `0 4px 16px ${color}44`,
-          }}>בדוק</button>
-          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.15)' }}>Enter לבדיקה</span>
-        </div>
-      )}
-
-      {/* wrong feedback */}
-      {lastResult === 'wrong' && (
-        <div style={{ marginTop: 16 }}>
-          <div style={{
-            background: 'rgba(231,76,60,0.08)', border: '1px solid rgba(231,76,60,0.2)',
-            borderRadius: 10, padding: '10px 14px', marginBottom: 12,
-          }}>
-            <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', marginBottom: 4, letterSpacing: '0.06em' }}>התשובה הנכונה</div>
-            <div style={{ fontSize: 14, color: '#e88', lineHeight: 1.6, fontWeight: 600 }}>{question?.target}</div>
-          </div>
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            <button onClick={onOverride} style={pill(false)}>סמן כנכון בכל זאת</button>
-            <button onClick={onNext} style={pill(true, color)}>המשך ←</button>
-          </div>
-        </div>
-      )}
-
-      {/* correct/override */}
       {(lastResult === 'correct' || lastResult === 'override') && (
-        <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div style={{ width: 20, height: 20, borderRadius: '50%', background: '#27ae60', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11 }}>✓</div>
-          <span style={{ fontSize: 13, color: '#27ae60', fontWeight: 600 }}>
-            {lastResult === 'override' ? 'סומן כנכון' : 'נכון'}
-          </span>
+        <div className="fade-in" style={{
+          marginTop: 20, width: '100%', textAlign: 'right',
+          color: 'var(--success)', fontFamily: HEEBO, fontWeight: 500, fontSize: 13,
+        }}>
+          {lastResult === 'override' ? '✓ סומן כנכון' : '✓ נכון'}
+        </div>
+      )}
+
+      {lastResult === 'wrong' && (
+        <div className="fade-in" style={{
+          marginTop: 20, width: '100%',
+          display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8,
+        }}>
+          <div style={{ ...LABEL }}>התשובה הנכונה</div>
+          <div style={{
+            color: 'var(--accent)', fontFamily: HEEBO, fontWeight: 500, fontSize: 15,
+            padding: '6px 10px', background: 'var(--accent-dim)', borderRadius: 6,
+            borderRight: '2px solid var(--accent)', maxWidth: '100%', wordBreak: 'break-word',
+          }}>{question?.target}</div>
+          <button onClick={onOverride} className="override-btn" style={{
+            marginTop: 4, background: 'transparent', border: '1px solid var(--border-lit)',
+            borderRadius: 8, color: 'var(--text-dim)', fontFamily: HEEBO, fontWeight: 400, fontSize: 12,
+            padding: '6px 14px', cursor: 'pointer', transition: 'border-color 150ms, color 150ms',
+          }}>סמן כנכון בכל זאת</button>
         </div>
       )}
     </div>
@@ -801,85 +699,69 @@ function InlineBlank({ question, difficulty, color, onSubmit, lastResult, onOver
 }
 
 // ============================================================
-// PHASE COMPLETE
+// PHASE COMPLETE OVERLAY
 // ============================================================
+function overlayBtn(primary) {
+  return {
+    height: 44, minWidth: 120, borderRadius: 10, padding: '0 18px',
+    fontFamily: HEEBO, fontWeight: 600, fontSize: 14, cursor: 'pointer',
+    border: primary ? 'none' : '1px solid var(--border)',
+    background: primary ? ACCENT_GRAD : 'var(--surface-grad)',
+    color: primary ? '#fff' : 'var(--text-dim)',
+    transition: 'opacity 150ms',
+  };
+}
+
 function PhaseCompleteScreen({ state, dispatch }) {
   const proto   = PROTOCOLS[state.track];
   const phase   = proto.phases[state.activePhaseIdx];
-  const color   = TC[state.track];
   const isLast  = state.activePhaseIdx >= proto.phases.length - 1;
   const isRunDone = isLast && state.track === 'fullrun';
   const elapsed = Math.max(0, Math.floor((Date.now() - state.phaseStartTime) / 1000));
   const accuracy = state.totalAnswered
     ? Math.round(((state.totalAnswered - state.sessionWrong) / state.totalAnswered) * 100) : 100;
-
-  const stats = [
-    { v: `${accuracy}%`, l: 'דיוק' },
-    { v: `${Math.floor(elapsed / 60)}:${String(elapsed % 60).padStart(2, '0')}`, l: 'זמן' },
-    { v: `${state.phaseClearedIndices.size}/${phase.bullets.length}`, l: 'סעיפים' },
-  ];
+  const timeStr = `${Math.floor(elapsed / 60)}:${String(elapsed % 60).padStart(2, '0')}`;
 
   return (
-    <div style={{
-      position: 'fixed', inset: 0,
-      background: 'linear-gradient(160deg, rgba(10,10,10,0.98) 0%, #0a0a0a 100%)',
-      display: 'flex', flexDirection: 'column', alignItems: 'center',
-      justifyContent: 'center', zIndex: 500, direction: 'rtl', padding: 28,
-    }} className="screen">
-
-      {/* glow ring behind badge */}
-      <div style={{
-        position: 'absolute',
-        width: 180, height: 180,
-        borderRadius: '50%',
-        background: `radial-gradient(circle, ${isRunDone ? '#27ae60' : color}22 0%, transparent 70%)`,
-        pointerEvents: 'none',
-      }} />
-
-      <div className="badge-enter" style={badge(90, isRunDone ? '#27ae60' : color)}>
+    <div className="fade-in" style={{
+      position: 'fixed', inset: 0, zIndex: 100,
+      background: 'rgba(6, 6, 8, 0.92)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
+      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+      gap: 24, direction: 'rtl', padding: 28,
+    }}>
+      <div className="badge-check" style={{ ...badge(72), fontSize: 'clamp(26px, 8vw, 32px)' }}>
         {isRunDone ? '✓' : phase.letter}
       </div>
 
-      <h2 style={{ fontSize: 30, fontWeight: 800, margin: '24px 0 6px', textAlign: 'center', letterSpacing: -1 }}>
-        {isRunDone ? 'מסלול הושלם!' : 'שלב הושלם ✓'}
-      </h2>
-      <p style={{ margin: '0 0 40px', color: 'rgba(255,255,255,0.35)', fontSize: 14, textAlign: 'center' }}>
-        {isRunDone ? 'X-CARE · CARE · PFC' : phase.title}
-      </p>
-
-      {/* stats */}
-      <div style={{
-        display: 'flex', gap: 0,
-        background: 'rgba(255,255,255,0.04)',
-        border: `1px solid ${BORDER}`,
-        borderRadius: 16, overflow: 'hidden',
-        marginBottom: 44,
-      }}>
-        {stats.map(({ v, l }, i) => (
-          <div key={l} className="stat-in"
-            style={{
-              padding: '18px 28px', textAlign: 'center',
-              borderLeft: i > 0 ? `1px solid ${BORDER}` : 'none',
-              animationDelay: `${i * 0.1}s`,
-            }}>
-            <div style={{ fontSize: 28, fontWeight: 800, color }}>{v}</div>
-            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', marginTop: 4, letterSpacing: '0.06em', textTransform: 'uppercase' }}>{l}</div>
-          </div>
-        ))}
+      <div style={{ textAlign: 'center' }}>
+        <div style={{ fontFamily: HEEBO, fontWeight: 900, fontSize: 'clamp(24px, 7vw, 28px)', color: 'var(--text-primary)' }}>
+          {isRunDone ? 'מסלול הושלם' : 'שלב הושלם'}
+        </div>
+        <div style={{ fontFamily: HEEBO, fontWeight: 300, fontSize: 13, color: 'var(--text-dim)', marginTop: 6 }}>
+          {isRunDone ? 'X-CARE · CARE · PFC' : phase.title}
+        </div>
       </div>
 
-      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center' }}>
-        <button onClick={() => dispatch({ type: 'RETRY_PHASE' })} style={pill(false)}>חזור לשלב</button>
+      <div style={{ display: 'flex', gap: 24, fontFamily: HEEBO, fontSize: 13, color: 'var(--text-dim)' }}>
+        <span><span style={{ fontFamily: MONO, fontWeight: 600, color: 'var(--text-primary)' }}>{accuracy}%</span> דיוק</span>
+        <span><span style={{ fontFamily: MONO, fontWeight: 600, color: 'var(--text-primary)' }}>{timeStr}</span> זמן</span>
+      </div>
+
+      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'center' }}>
+        <button onClick={() => dispatch({ type: 'RETRY_PHASE' })} style={overlayBtn(false)}>חזור לשלב</button>
         {!isLast && (
-          <button onClick={() => dispatch({ type: 'NEXT_PHASE', phaseIdx: state.activePhaseIdx + 1 })}
-            style={pill(true, color)}>
+          <button onClick={() => dispatch({ type: 'NEXT_PHASE', phaseIdx: state.activePhaseIdx + 1 })} style={overlayBtn(true)}>
             {state.track === 'fullrun' ? 'ממשיך ←' : 'השלב הבא ←'}
           </button>
         )}
-        <button onClick={() => dispatch({ type: 'RESET' })} style={pill(false)}>
-          בחר פרוטוקול
-        </button>
       </div>
+
+      <button onClick={() => dispatch({ type: 'RESET' })} className="backlink" style={{
+        background: 'none', border: 'none', color: 'var(--text-dim)',
+        fontFamily: HEEBO, fontWeight: 400, fontSize: 13, padding: 8, transition: 'color 150ms',
+      }}>
+        בחר פרוטוקול
+      </button>
     </div>
   );
 }
@@ -888,9 +770,11 @@ function PhaseCompleteScreen({ state, dispatch }) {
 // GAME SCREEN
 // ============================================================
 function GameScreen({ state, dispatch }) {
-  const { track, mode, difficulty, activePhaseIdx, phaseSeenIndices, phaseClearedIndices, currentQuestion, lastResult } = state;
+  const { track, mode, difficulty, activePhaseIdx, currentQuestion, lastResult } = state;
   const proto = PROTOCOLS[track];
-  const color = TC[track];
+
+  const [val, setVal] = useState('');
+  const inputRef = useRef(null);
 
   const stateRef = useRef(state);
   useEffect(() => { stateRef.current = state; });
@@ -906,7 +790,9 @@ function GameScreen({ state, dispatch }) {
     });
   }, [dispatch]);
 
+  const timerRef = useRef(null);
   const advance = useCallback(() => {
+    if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null; }
     const s = stateRef.current;
     const cap = s.mode === 'phased'
       ? PROTOCOLS[s.track].phases[s.activePhaseIdx].bullets.length : Infinity;
@@ -922,109 +808,122 @@ function GameScreen({ state, dispatch }) {
 
   useEffect(() => { genQuestion(); }, []); // eslint-disable-line
 
+  // reset + autofocus on every new question
+  useEffect(() => {
+    setVal('');
+    const t = setTimeout(() => inputRef.current?.focus(), 90);
+    return () => clearTimeout(t);
+  }, [currentQuestion?.key]);
+
   useEffect(() => {
     if (lastResult === 'correct' || lastResult === 'override') {
-      const t = setTimeout(() => advanceRef.current(), 750);
-      return () => clearTimeout(t);
+      timerRef.current = setTimeout(() => advanceRef.current(), 750);
+      return () => { if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null; } };
     }
   }, [lastResult]);
 
-  const handleSubmit = val => {
+  const handleSubmit = () => {
     if (lastResult !== null || !currentQuestion) return;
     const ok = normalize(val) === normalize(currentQuestion.target);
     dispatch({ type: ok ? 'ANSWER_CORRECT' : 'ANSWER_WRONG', key: currentQuestion.key });
   };
 
-  const phase      = currentQuestion?.phase ?? (activePhaseIdx !== null ? proto.phases[activePhaseIdx] : null);
-  const phaseTotal = mode === 'phased' ? proto.phases[activePhaseIdx]?.bullets.length : null;
-  const totalPh    = proto.phases.length;
-  const curPh      = (activePhaseIdx ?? 0) + 1;
+  const phase     = currentQuestion?.phase ?? (activePhaseIdx !== null ? proto.phases[activePhaseIdx] : null);
+  const trackPill = phase?._track || proto.label;
 
   if (!currentQuestion) {
     return (
-      <div style={{ width: '100%', maxWidth: 480, padding: '0 16px', paddingTop: 60, textAlign: 'center', color: 'rgba(255,255,255,0.2)', fontSize: 13 }}>
-        טוען...
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-dim)', fontFamily: HEEBO, fontSize: 13 }}>
+        טוען…
       </div>
     );
   }
 
+  const locked      = lastResult !== null;
+  const canSubmit   = val.trim().length > 0;
+  const btnDisabled = !locked && !canSubmit;
+
   return (
-    <div style={{ width: '100%', maxWidth: 480, padding: '0 16px' }} className="screen">
-      <ScoreHUD score={state.score} streak={state.streak} total={state.totalAnswered} />
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, position: 'relative' }}>
 
-      {/* full-run progress bar */}
-      {track === 'fullrun' && mode === 'phased' && (
-        <div style={{ paddingTop: 22, marginBottom: 4 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-            <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.22)' }}>
-              {curPh} / {totalPh}
-            </span>
-            <span style={{
-              fontSize: 10, fontWeight: 700, letterSpacing: '0.08em',
-              color, background: `${color}18`, border: `1px solid ${color}30`,
-              borderRadius: 8, padding: '2px 8px',
-            }}>
-              {phase?._track}
-            </span>
-          </div>
-          <div style={{ height: 3, background: 'rgba(255,255,255,0.06)', borderRadius: 2, overflow: 'hidden' }}>
-            <div style={{
-              height: '100%', borderRadius: 2,
-              background: `linear-gradient(90deg, ${color}, ${lighten(color, 0.15)})`,
-              width: `${(curPh / totalPh) * 100}%`,
-              transition: 'width 0.6s cubic-bezier(0.4,0,0.2,1)',
-              boxShadow: `0 0 8px ${color}66`,
-            }} />
-          </div>
+      {/* TopBar */}
+      <div style={{
+        height: 48, padding: '0 16px', flexShrink: 0, direction: 'ltr',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      }}>
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 6,
+          fontFamily: MONO, fontWeight: 600, fontSize: 'clamp(12px, 3vw, 14px)',
+          color: state.streak >= 3 ? 'var(--text-primary)' : 'var(--text-dim)',
+        }}>
+          <span style={{ fontSize: 14 }}>🔥</span><span>{state.streak}</span>
         </div>
-      )}
 
-      {/* phase header */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '26px 0 16px' }}>
-        <div key={`${activePhaseIdx}-${currentQuestion?.phaseIdx}`} className="badge-enter"
-          style={badge(56, color)}>
-          {phase?.letter ?? '?'}
+        <div style={{
+          background: 'var(--surface-2-grad)', border: '1px solid var(--border)',
+          borderRadius: 20, padding: '4px 14px', whiteSpace: 'nowrap',
+          fontFamily: HEEBO, fontWeight: 500, fontSize: 11, textTransform: 'uppercase',
+          letterSpacing: '0.08em', color: 'var(--text-dim)',
+        }}>{trackPill}</div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span style={{ fontFamily: MONO, fontWeight: 600, fontSize: 'clamp(12px, 3vw, 14px)', color: 'var(--text-dim)' }}>
+            {state.score} / {state.totalAnswered}
+          </span>
+          <button onClick={() => dispatch({ type: 'RESET' })} className="exit-x" aria-label="יציאה" style={{
+            background: 'none', border: 'none', padding: 4, display: 'flex',
+            color: 'var(--text-ghost)', transition: 'color 150ms',
+          }}>
+            <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round">
+              <path d="M18 6 6 18M6 6l12 12" />
+            </svg>
+          </button>
         </div>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <Label color={color}>{proto.label}</Label>
-          <div style={{ fontWeight: 700, fontSize: 15, marginTop: 5, lineHeight: 1.35, color: '#fff' }}>
-            {phase?.title}
-          </div>
-        </div>
-        {mode === 'phased' && phaseTotal != null && (
-          <ProgressRing cleared={phaseClearedIndices.size} total={phaseTotal} color={color} />
-        )}
       </div>
 
-      <InlineBlank
+      {/* PhaseHeader */}
+      <div style={{ height: 72, padding: '0 20px', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 16 }}>
+        <div style={{ ...badge(48), fontSize: 'clamp(22px, 5vw, 26px)' }}>{phase?.letter ?? '?'}</div>
+        <div style={{ flex: 1, minWidth: 0, textAlign: 'right' }}>
+          <div style={{
+            fontFamily: HEEBO, fontWeight: 700, color: 'var(--text-primary)',
+            fontSize: 'clamp(15px, 4vw, 18px)', lineHeight: 1.3,
+            whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+          }}>{phase?.title}</div>
+        </div>
+      </div>
+      <div style={{
+        height: 1, margin: '0 20px', flexShrink: 0,
+        background: 'linear-gradient(90deg, transparent, var(--border) 30%, var(--border) 70%, transparent)',
+      }} />
+
+      {/* QuestionCard */}
+      <QuestionCard
+        key={currentQuestion.key}
         question={currentQuestion}
         difficulty={difficulty}
-        color={color}
-        onSubmit={handleSubmit}
-        lastResult={lastResult}
+        val={val} setVal={setVal} inputRef={inputRef}
+        locked={locked} lastResult={lastResult}
         onOverride={() => dispatch({ type: 'ANSWER_OVERRIDE', key: currentQuestion.key })}
-        onNext={advance}
+        onSubmitEnter={handleSubmit}
       />
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 4 }}>
+      {/* BottomBar */}
+      <div style={{ height: 72, padding: '12px 16px', flexShrink: 0 }}>
         <button
-          style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.25)', fontSize: 12, cursor: 'pointer', padding: '8px 0', transition: 'color 0.12s' }}
-          onMouseEnter={e => (e.target.style.color = 'rgba(255,255,255,0.55)')}
-          onMouseLeave={e => (e.target.style.color = 'rgba(255,255,255,0.25)')}
-          onClick={() => dispatch({ type: 'RESET' })}
+          className="submit-btn"
+          disabled={btnDisabled}
+          onClick={() => (locked ? advance() : handleSubmit())}
+          style={{
+            width: '100%', height: 48, borderRadius: 12, border: 'none',
+            background: ACCENT_GRAD, color: '#fff',
+            fontFamily: HEEBO, fontWeight: 700, fontSize: 'clamp(14px, 4vw, 16px)', letterSpacing: '0.02em',
+            cursor: 'pointer', transition: 'opacity 150ms, transform 100ms',
+            opacity: btnDisabled ? 0.35 : 1, pointerEvents: btnDisabled ? 'none' : 'auto',
+          }}
         >
-          ← התחל מחדש
+          {locked ? 'המשך ←' : 'בדוק'}
         </button>
-        {mode === 'phased' && track !== 'fullrun' && (
-          <button
-            style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.25)', fontSize: 12, cursor: 'pointer', padding: '8px 0', transition: 'color 0.12s' }}
-            onMouseEnter={e => (e.target.style.color = 'rgba(255,255,255,0.55)')}
-            onMouseLeave={e => (e.target.style.color = 'rgba(255,255,255,0.25)')}
-            onClick={() => dispatch({ type: 'SET_SCREEN', screen: 'phase' })}
-          >
-            שנה שלב
-          </button>
-        )}
       </div>
     </div>
   );
@@ -1053,10 +952,11 @@ export default function App() {
 
   return (
     <div style={{
-      minHeight: '100dvh', background: '#0a0a0a', color: '#fff',
-      fontFamily: FONT, direction: 'rtl',
-      display: 'flex', flexDirection: 'column', alignItems: 'center',
-      padding: '0 0 96px',
+      minHeight: '100dvh', width: '100%', maxWidth: 480, margin: '0 auto',
+      display: 'flex', flexDirection: 'column',
+      background: 'linear-gradient(160deg, #0d0d0d 0%, #060608 100%)',
+      color: 'var(--text-primary)', fontFamily: HEEBO, direction: 'rtl',
+      padding: 'env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)',
     }}>
       {(SCREENS[state.screen] ?? SCREENS.track)(state, dispatch)}
     </div>
