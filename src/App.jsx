@@ -388,6 +388,9 @@ const GLOBAL_CSS = `
   .submit-btn:active:not(:disabled) { transform: scale(0.97); }
   .exit-x:hover { color: var(--text-dim); }
   .backlink:hover { color: var(--text-primary); }
+  .backlink:active { transform: translateX(2px); }
+  .menu-row:active { transform: scale(0.985); }
+  .overlay-btn:active { transform: scale(0.97); }
 
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation: none !important; }
@@ -447,6 +450,7 @@ function MenuRow({ onClick, children }) {
       onClick={onClick}
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
+      className="menu-row"
       style={{
         display: 'block', width: '100%', textAlign: 'right', padding: '16px 18px',
         borderRadius: 14,
@@ -461,14 +465,19 @@ function MenuRow({ onClick, children }) {
   );
 }
 
-function BackLink({ onClick }) {
+function BackLink({ onClick, label = 'חזור' }) {
   return (
     <button onClick={onClick} className="backlink" style={{
-      display: 'block', margin: '20px auto 0', background: 'none', border: 'none',
+      display: 'flex', alignItems: 'center', gap: 6, margin: '20px auto 0',
+      background: 'none', border: 'none',
       color: 'var(--text-dim)', fontFamily: HEEBO, fontWeight: 400, fontSize: 13,
-      padding: 8, transition: 'color 150ms',
+      padding: '8px 10px', transition: 'color 150ms, transform 100ms',
     }}>
-      ← חזור
+      <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M9 6l6 6-6 6" />
+      </svg>
+      {label}
     </button>
   );
 }
@@ -524,9 +533,16 @@ function TrackSelector({ dispatch }) {
 
 function ModeSelector({ track, dispatch }) {
   const proto = PROTOCOLS[track];
+  const isFull = track === 'fullrun';
   const MODES = [
-    { key: 'free',   label: 'חופשי',      desc: 'שאלות אקראיות מכל שלבי הפרוטוקול' },
-    { key: 'phased', label: 'שלב אחר שלב', desc: track === 'fullrun' ? 'X-CARE · CARE · PFC — כל הסכמות בסדר' : 'מתמקד בשלב אחד, עם מעקב התקדמות' },
+    { key: 'free',   label: 'חופשי', desc: 'שאלות מהקטגוריה שנבחרה בסדר אקראי' },
+    {
+      key: 'phased',
+      label: isFull ? 'בחינת דמה' : 'שלב אחרי שלב',
+      desc: isFull
+        ? 'כל הסכמות לפי הסדר הכרונולוגי — X-CARE · CARE · PFC, בלי בלבולים'
+        : 'הסכמה / השלב לפי הסדר הכרונולוגי שלו בסכמה המקורית, בלי בלבולים',
+    },
   ];
   return (
     <ScreenWrap>
@@ -571,7 +587,10 @@ function DifficultySelector({ track, mode, dispatch }) {
           </MenuRow>
         ))}
       </div>
-      <BackLink onClick={() => dispatch({ type: 'SELECT_MODE', mode })} />
+      <BackLink onClick={() => dispatch({
+        type: 'SET_SCREEN',
+        screen: (mode === 'phased' && track !== 'fullrun') ? 'phase' : 'mode',
+      })} />
     </ScreenWrap>
   );
 }
@@ -619,7 +638,7 @@ function PhaseSelector({ track, dispatch }) {
           <PhaseBadgeButton key={idx} phase={phase} onClick={() => dispatch({ type: 'SELECT_PHASE', phaseIdx: idx })} />
         ))}
       </div>
-      <BackLink onClick={() => dispatch({ type: 'SELECT_MODE', mode: 'phased' })} />
+      <BackLink onClick={() => dispatch({ type: 'SET_SCREEN', screen: 'mode' })} />
     </ScreenWrap>
   );
 }
@@ -850,8 +869,8 @@ function PerfectRunScreen({ state, dispatch }) {
 
       {/* Actions */}
       <div style={{ display: 'flex', gap: 12, zIndex: 1, flexWrap: 'wrap', justifyContent: 'center' }}>
-        <button onClick={() => dispatch({ type: 'RESET' })} style={overlayBtn(false)}>בחר פרוטוקול</button>
-        <button onClick={() => dispatch({ type: 'RETRY_PHASE' })} style={overlayBtn(true)}>שחק שוב ←</button>
+        <button className="overlay-btn" onClick={() => dispatch({ type: 'RESET' })} style={overlayBtn(false)}>בחר פרוטוקול</button>
+        <button className="overlay-btn" onClick={() => dispatch({ type: 'RETRY_PHASE' })} style={overlayBtn(true)}>שחק שוב ←</button>
       </div>
     </div>
   );
@@ -897,9 +916,9 @@ function PhaseCompleteScreen({ state, dispatch }) {
       </div>
 
       <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'center' }}>
-        <button onClick={() => dispatch({ type: 'RETRY_PHASE' })} style={overlayBtn(false)}>חזור לשלב</button>
+        <button className="overlay-btn" onClick={() => dispatch({ type: 'RETRY_PHASE' })} style={overlayBtn(false)}>חזור לשלב</button>
         {!isLast && (
-          <button onClick={() => dispatch({ type: 'NEXT_PHASE', phaseIdx: state.activePhaseIdx + 1 })} style={overlayBtn(true)}>
+          <button className="overlay-btn" onClick={() => dispatch({ type: 'NEXT_PHASE', phaseIdx: state.activePhaseIdx + 1 })} style={overlayBtn(true)}>
             {state.track === 'fullrun' ? 'ממשיך ←' : 'השלב הבא ←'}
           </button>
         )}
