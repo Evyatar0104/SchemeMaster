@@ -615,6 +615,10 @@ function QuestionCard({ question, difficulty, val, setVal, inputRef, locked, las
       ? { borderColor: 'rgba(230,57,70,0.5)', background: 'linear-gradient(145deg, #1a1014 0%, #110d0e 100%)' }
       : {};
 
+  const phaseTitle = question?.phase?.title?.split('—')[0].trim() ?? '';
+  const phaseLetter = question?.phase?.letter ?? '';
+  const phaseTrack = question?.phase?._track ?? '';
+
   return (
     <div className={`qcard qcard-enter ${flash}`} style={{
       flex: 1, minHeight: 0, margin: '12px 16px', borderRadius: 16,
@@ -624,6 +628,36 @@ function QuestionCard({ question, difficulty, val, setVal, inputRef, locked, las
       overflow: 'hidden', direction: 'rtl', textAlign: 'right',
       ...stateStyle,
     }}>
+
+      {/* Phase context label — anchored above the question within the centered group */}
+      <div style={{
+        width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'flex-end',
+        gap: 10, marginBottom: 18, paddingBottom: 16,
+        borderBottom: '1px solid var(--border)',
+      }}>
+        <div style={{ textAlign: 'right' }}>
+          <div style={{
+            fontFamily: HEEBO, fontWeight: 600,
+            fontSize: 'clamp(13px, 3.5vw, 15px)', color: 'var(--text-primary)',
+            lineHeight: 1.2,
+          }}>{phaseTitle}</div>
+          {phaseTrack && (
+            <div style={{
+              fontFamily: MONO, fontWeight: 400, fontSize: 11,
+              color: 'var(--text-dim)', marginTop: 3, letterSpacing: '0.05em',
+            }}>{phaseTrack}</div>
+          )}
+        </div>
+        <div style={{
+          width: 36, height: 36, borderRadius: '50%',
+          background: ACCENT_GRAD, flexShrink: 0,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontFamily: HEEBO, fontWeight: 900, color: '#fff',
+          fontSize: phaseLetter.length > 2 ? 9 : phaseLetter.length > 1 ? 11 : 15,
+          letterSpacing: '-0.02em',
+        }}>{phaseLetter}</div>
+      </div>
+
       {isHard ? (
         <div style={{ width: '100%' }}>
           <div style={{ ...LABEL, marginBottom: 12 }}>כתוב את הסעיף המלא</div>
