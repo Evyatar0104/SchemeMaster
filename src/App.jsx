@@ -271,10 +271,24 @@ function applyBlank(bullet, difficulty) {
   return { prefix: '', suffix: '', target: bullet };
 }
 
-function pickQuestion(proto, mode, phaseIdx, difficulty, seenSet, lastKey) {
+function pickQuestion(proto, mode, phaseIdx, difficulty, seenSet, clearedSet, lastKey) {
   const all = mode === 'phased'
     ? proto.phases[phaseIdx].bullets.map((b, i) => ({ b, phaseIdx, bulletIdx: i, key: `${phaseIdx}_${i}` }))
     : proto.phases.flatMap((ph, pi) => ph.bullets.map((b, bi) => ({ b, phaseIdx: pi, bulletIdx: bi, key: `${pi}_${bi}` })));
+
+  if (mode === 'phased') {
+    // Sequential: show bullets in source order. First pass = unseen in order.
+    // After all seen, replay only wrong answers (uncleared) in order.
+    const unseen = all.filter(x => !seenSet.has(x.key));
+    if (unseen.length) {
+      const pick = unseen[0];
+      return { ...pick, phase: proto.phases[pick.phaseIdx], ...applyBlank(pick.b, difficulty) };
+    }
+    const uncleared = all.filter(x => !clearedSet.has(x.key));
+    const pick = uncleared.length ? uncleared[0] : all[0];
+    return { ...pick, phase: proto.phases[pick.phaseIdx], ...applyBlank(pick.b, difficulty) };
+  }
+
   const unseen  = all.filter(x => !seenSet.has(x.key) && x.key !== lastKey);
   const notLast = all.filter(x => x.key !== lastKey);
   const arr = unseen.length ? unseen : notLast.length ? notLast : all;
@@ -920,7 +934,7 @@ function GameScreen({ state, dispatch }) {
       type: 'SET_QUESTION',
       question: pickQuestion(
         PROTOCOLS[s.track], s.mode, s.activePhaseIdx,
-        s.difficulty, s.phaseSeenIndices, s.currentQuestion?.key ?? null,
+        s.difficulty, s.phaseSeenIndices, s.phaseClearedIndices, s.currentQuestion?.key ?? null,
       ),
     });
   }, [dispatch]);
